@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>BEAST CLEAN</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black:#0a0a0a; --white:#f0ece4; --red:#e63022; --yellow:#f5c842;
+  --green:#2ecc71; --gray:#1a1a1a; --border:#2a2a2a;
+  --body-color:#e05c2a; --mind-color:#4a9eff; --spirit-color:#a855f7;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:var(--black);color:var(--white);font-family:'Space Mono',monospace;min-height:100vh;overflow-x:hidden;}
+.screen{display:none;min-height:100vh;flex-direction:column;padding-bottom:60px;}
+.screen.active{display:flex;}
+
+/* NAV */
+nav{display:flex;border-top:2px solid var(--border);position:fixed;bottom:0;left:0;right:0;background:var(--black);z-index:100;}
+nav button{flex:1;padding:13px 4px;background:none;border:none;border-right:1px solid var(--border);color:#555;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;}
+nav button:last-child{border-right:none;}
+nav button.active{color:var(--yellow);background:#111;}
+
+/* HERO */
+.hero{padding:24px 20px 18px;border-bottom:2px solid var(--border);position:relative;overflow:hidden;}
+.hero::before{content:attr(data-bg);position:absolute;right:-10px;top:50%;transform:translateY(-50%);font-family:'Bebas Neue',sans-serif;font-size:100px;color:#111;pointer-events:none;line-height:1;}
+.day-label{font-size:10px;color:#555;letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;}
+.day-count{font-family:'Bebas Neue',sans-serif;font-size:88px;line-height:1;color:var(--yellow);position:relative;z-index:1;}
+.day-count span{font-size:26px;color:#555;vertical-align:middle;margin-left:6px;}
+.start-date{font-size:10px;color:#444;margin-top:5px;position:relative;z-index:1;}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--yellow);position:relative;z-index:1;}
+.hero-row{display:flex;align-items:center;justify-content:space-between;}
+
+/* STATUS */
+.status-grid{display:grid;grid-template-columns:1fr 1fr;border-bottom:2px solid var(--border);}
+.status-cell{padding:16px;border-right:1px solid var(--border);}
+.status-cell:nth-child(even){border-right:none;}
+.status-cell:nth-child(n+3){border-top:1px solid var(--border);}
+.cell-label{font-size:9px;color:#444;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
+.cell-value{font-family:'Bebas Neue',sans-serif;font-size:26px;}
+.cell-value.green{color:var(--green);}
+
+/* SKILLS */
+.skills-panel{padding:20px;border-bottom:2px solid var(--border);}
+.skills-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#666;margin-bottom:14px;}
+.skill-row{margin-bottom:14px;}
+.skill-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.skill-name{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;}
+.skill-name.body{color:var(--body-color);}
+.skill-name.mind{color:var(--mind-color);}
+.skill-name.spirit{color:var(--spirit-color);}
+.skill-meta{font-size:10px;color:#555;}
+.skill-bar-bg{height:8px;background:#1a1a1a;border-radius:4px;border:1px solid var(--border);overflow:hidden;}
+.skill-bar-fill{height:100%;border-radius:4px;transition:width 0.6s cubic-bezier(.34,1.56,.64,1);}
+.skill-bar-fill.body{background:var(--body-color);}
+.skill-bar-fill.mind{background:var(--mind-color);}
+.skill-bar-fill.spirit{background:var(--spirit-color);}
+
+/* SECTION */
+.section{padding:18px 20px;border-bottom:2px solid var(--border);}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#666;margin-bottom:12px;}
+
+/* MOOD */
+.mood-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+.mood-btn{aspect-ratio:1;background:var(--gray);border:2px solid var(--border);border-radius:8px;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.mood-btn.selected{border-color:var(--yellow);background:#1a1700;}
+
+/* INPUTS */
+.quick-note{width:100%;background:var(--gray);border:2px solid var(--border);border-radius:8px;color:var(--white);font-family:'Space Mono',monospace;font-size:13px;padding:12px;resize:none;height:80px;margin-bottom:12px;}
+.quick-note:focus{outline:none;border-color:#444;}
+.quick-note::placeholder{color:#333;}
+
+/* BUTTONS */
+.btn{width:100%;padding:13px;background:var(--yellow);color:var(--black);border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;cursor:pointer;}
+.btn.secondary{background:var(--gray);color:var(--white);border:2px solid var(--border);}
+.btn.danger{background:var(--red);color:var(--white);}
+.btn.sm{font-size:13px;padding:10px;}
+
+/* ANCHORS */
+.anchor-item{display:flex;align-items:center;padding:13px 20px;border-bottom:1px solid var(--border);gap:10px;}
+.anchor-time{font-family:'Bebas Neue',sans-serif;font-size:19px;color:var(--yellow);min-width:50px;}
+.anchor-text{flex:1;font-size:11px;line-height:1.4;color:#aaa;}
+.anchor-controls{display:flex;gap:5px;flex-shrink:0;align-items:center;}
+.icon-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:none;color:#555;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.anchor-check{width:28px;height:28px;border:2px solid var(--border);border-radius:6px;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.anchor-check.done{background:var(--green);border-color:var(--green);}
+.anchor-check.done::after{content:'✓';color:var(--black);font-size:13px;font-weight:bold;}
+
+/* STREAK */
+.streak-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.streak-day{aspect-ratio:1;border-radius:4px;background:var(--gray);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;color:#333;}
+.streak-day.clean{background:#1a3a2a;border-color:var(--green);color:var(--green);}
+.streak-day.today{border-color:var(--yellow);color:var(--yellow);}
+
+/* CRISIS */
+.crisis-hero{background:var(--red);padding:24px 20px 18px;text-align:center;}
+.crisis-title{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:3px;line-height:1;margin-bottom:5px;}
+.crisis-sub{font-size:10px;opacity:.8;letter-spacing:2px;}
+.crisis-timer{font-family:'Bebas Neue',sans-serif;font-size:72px;text-align:center;padding:16px;border-bottom:2px solid var(--border);color:var(--yellow);letter-spacing:4px;transition:color .3s;}
+.crisis-card{margin:10px 20px;padding:16px;background:var(--gray);border:2px solid var(--border);border-radius:8px;border-left:4px solid var(--yellow);}
+.crisis-card-title{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;color:var(--yellow);margin-bottom:5px;}
+.crisis-card p{font-size:12px;color:#aaa;line-height:1.6;}
+
+/* CRISIS ACTIONS — новые интерактивные */
+.action-card{background:var(--gray);border:2px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden;transition:border-color .2s;}
+.action-card.done-card{border-color:var(--green);}
+.action-header{display:flex;align-items:center;padding:14px;gap:12px;cursor:pointer;}
+.action-icon{font-size:22px;flex-shrink:0;}
+.action-info{flex:1;}
+.action-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;margin-bottom:2px;}
+.action-xp{font-size:10px;color:#555;}
+.action-xp .body-xp{color:var(--body-color);}
+.action-xp .mind-xp{color:var(--mind-color);}
+.action-xp .spirit-xp{color:var(--spirit-color);}
+.action-check{width:32px;height:32px;border-radius:50%;border:2px solid var(--border);background:none;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s;}
+.action-check.checked{background:var(--green);border-color:var(--green);}
+.action-body{padding:0 14px 14px;display:none;border-top:1px solid var(--border);padding-top:12px;margin-top:0;}
+.action-body.open{display:block;}
+.action-desc{font-size:12px;color:#888;line-height:1.6;margin-bottom:10px;}
+.action-do-btn{width:100%;padding:10px;background:#222;border:1px solid var(--border);border-radius:6px;color:var(--white);font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer;transition:background .2s;}
+.action-do-btn:active{background:#333;}
+.action-do-btn.done-btn{background:#1a3a2a;color:var(--green);border-color:var(--green);}
+
+/* BREATHING */
+.breathing-container{display:flex;flex-direction:column;align-items:center;padding:36px 20px;gap:24px;}
+.breathing-circle{width:150px;height:150px;border-radius:50%;border:3px solid var(--yellow);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;color:var(--yellow);}
+.breathing-circle.inhale{animation:breatheIn 4s ease-in-out forwards;}
+.breathing-circle.hold{transform:scale(1.4);}
+.breathing-circle.exhale{animation:breatheOut 8s ease-in-out forwards;}
+@keyframes breatheIn{from{transform:scale(1)}to{transform:scale(1.4)}}
+@keyframes breatheOut{from{transform:scale(1.4)}to{transform:scale(1)}}
+.breathing-instruction{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:4px;text-align:center;}
+.breathing-count{font-size:44px;color:var(--yellow);font-family:'Bebas Neue',sans-serif;}
+
+/* LOG */
+.log-entry{padding:13px 20px;border-bottom:1px solid var(--border);}
+.log-entry-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.log-entry-date{font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--yellow);}
+.log-entry-mood{font-size:17px;}
+.log-entry-note{font-size:11px;color:#666;line-height:1.5;}
+.log-empty{padding:60px 20px;text-align:center;color:#333;font-size:12px;line-height:1.8;}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;align-items:flex-end;}
+.modal-overlay.open{display:flex;}
+.modal{background:#111;border-top:2px solid var(--yellow);border-radius:16px 16px 0 0;padding:22px 20px 36px;width:100%;animation:slideUp .25s ease;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--yellow);margin-bottom:18px;}
+.modal-field{margin-bottom:12px;}
+.modal-label{font-size:10px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;display:block;}
+.modal-input{width:100%;background:var(--gray);border:2px solid var(--border);border-radius:8px;color:var(--white);font-family:'Space Mono',monospace;font-size:14px;padding:11px;}
+.modal-input:focus{outline:none;border-color:#555;}
+.modal-btns{display:flex;gap:10px;margin-top:18px;}
+
+/* XP POPUP */
+.xp-popup{position:fixed;pointer-events:none;z-index:500;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;opacity:0;transform:translateY(0);transition:none;}
+.xp-popup.animate{animation:xpFloat 1.4s ease-out forwards;}
+@keyframes xpFloat{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-80px)}}
+
+/* TOAST */
+.toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--yellow);color:var(--black);padding:11px 22px;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;opacity:0;transition:all .3s;z-index:999;white-space:nowrap;pointer-events:none;max-width:90vw;text-align:center;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="anchorModal">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">// НОВЫЙ ЯКОРЬ</div>
+    <div class="modal-field"><label class="modal-label">Время</label><input class="modal-input" type="time" id="modalTime" value="09:00"></div>
+    <div class="modal-field"><label class="modal-label">Иконка (эмодзи)</label><input class="modal-input" type="text" id="modalIcon" placeholder="🎯" maxlength="4"></div>
+    <div class="modal-field"><label class="modal-label">Описание</label><input class="modal-input" type="text" id="modalText" placeholder="Что делать?"></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="saveAnchor()" style="flex:1">СОХРАНИТЬ</button>
+      <button class="btn secondary" onclick="closeModal()" style="flex:1">ОТМЕНА</button>
+    </div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="screen-home" class="screen active">
+  <div class="hero" data-bg="CLEAN">
+    <div class="day-label">// ДЕНЬ БЕЗ КУРЕНИЯ</div>
+    <div class="day-count" id="dayCount">0 <span>дней</span></div>
+    <div class="start-date" id="startDateLabel">Начало: не задано</div>
+  </div>
+  <div class="status-grid">
+    <div class="status-cell"><div class="cell-label">Часов чисто</div><div class="cell-value green" id="hoursClean">0</div></div>
+    <div class="status-cell"><div class="cell-label">Настроение</div><div class="cell-value" id="lastMoodDisplay">—</div></div>
+    <div class="status-cell"><div class="cell-label">Тренировок</div><div class="cell-value" id="workoutCount">0</div></div>
+    <div class="status-cell"><div class="cell-label">Кризисов пройдено</div><div class="cell-value green" id="crisisCount">0</div></div>
+  </div>
+
+  <!-- SKILLS -->
+  <div class="skills-panel">
+    <div class="skills-title">// НАВЫКИ</div>
+    <div class="skill-row">
+      <div class="skill-header">
+        <span class="skill-name body">💪 ТЕЛО</span>
+        <span class="skill-meta" id="body-meta">Ур. 1 · 0/100 XP</span>
+      </div>
+      <div class="skill-bar-bg"><div class="skill-bar-fill body" id="body-bar" style="width:0%"></div></div>
+    </div>
+    <div class="skill-row">
+      <div class="skill-header">
+        <span class="skill-name mind">🧠 РАЗУМ</span>
+        <span class="skill-meta" id="mind-meta">Ур. 1 · 0/100 XP</span>
+      </div>
+      <div class="skill-bar-bg"><div class="skill-bar-fill mind" id="mind-bar" style="width:0%"></div></div>
+    </div>
+    <div class="skill-row" style="margin-bottom:0">
+      <div class="skill-header">
+        <span class="skill-name spirit">🔥 ДУХ</span>
+        <span class="skill-meta" id="spirit-meta">Ур. 1 · 0/100 XP</span>
+      </div>
+      <div class="skill-bar-bg"><div class="skill-bar-fill spirit" id="spirit-bar" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">// НАСТРОЕНИЕ СЕЙЧАС</div>
+    <div class="mood-grid">
+      <button class="mood-btn" data-mood="💀" onclick="selectMood(this)">💀</button>
+      <button class="mood-btn" data-mood="😤" onclick="selectMood(this)">😤</button>
+      <button class="mood-btn" data-mood="😐" onclick="selectMood(this)">😐</button>
+      <button class="mood-btn" data-mood="🤙" onclick="selectMood(this)">🤙</button>
+      <button class="mood-btn" data-mood="🔥" onclick="selectMood(this)">🔥</button>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-title">// ЗАМЕТКА ДНЯ</div>
+    <textarea class="quick-note" id="quickNote" placeholder="Как идёт день? Что чувствуешь?"></textarea>
+    <button class="btn" onclick="saveEntry()">СОХРАНИТЬ ДЕНЬ</button>
+  </div>
+  <div class="section">
+    <div class="section-title">// ТРЕНИРОВКА</div>
+    <button class="btn secondary" onclick="logWorkout()">✊ ОТМЕТИТЬ ТРЕНИРОВКУ (+30 💪)</button>
+  </div>
+  <div class="section" style="border-bottom:none;">
+    <button class="btn danger" onclick="goScreen('crisis')" style="margin-bottom:10px;">⚡ ТЯНЕТ — ПОМОГИ</button>
+    <button class="btn secondary sm" onclick="resetStreak()">СБРОСИТЬ СЧЁТЧИК</button>
+  </div>
+</div>
+
+<!-- ANCHORS -->
+<div id="screen-anchors" class="screen">
+  <div class="hero" data-bg="ПЛАН">
+    <div class="hero-row">
+      <div><div class="day-label">// ЯКОРЯ ДНЯ</div><div class="hero-title">РАСПИСАНИЕ</div></div>
+      <button onclick="openAddModal()" style="width:42px;height:42px;border-radius:50%;background:var(--yellow);border:none;color:var(--black);font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:bold;flex-shrink:0;">+</button>
+    </div>
+  </div>
+  <div style="overflow-y:auto;flex:1;">
+    <div id="anchorList"></div>
+    <div class="section" style="border-top:2px solid var(--border);">
+      <div class="section-title">// СТРИК — 21 ДЕНЬ</div>
+      <div class="streak-grid" id="streakGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CRISIS -->
+<div id="screen-crisis" class="screen">
+  <div class="crisis-hero">
+    <div class="crisis-title">ДЕРЖИСЬ</div>
+    <div class="crisis-sub">// ТЯГА ПРОЙДЁТ ЧЕРЕЗ 10–15 МИНУТ</div>
+  </div>
+  <div class="crisis-timer" id="crisisTimer">15:00</div>
+  <div style="overflow-y:auto;flex:1;">
+    <div style="padding:10px 20px 0;display:flex;gap:10px;">
+      <button class="btn" onclick="startCrisisTimer()" style="flex:1">СТАРТ</button>
+      <button class="btn secondary" onclick="stopCrisisTimer()" style="flex:1">СТОП</button>
+    </div>
+    <div class="crisis-card">
+      <div class="crisis-card-title">// ПОМНИ</div>
+      <p>Ты уже <strong id="crisisDaysInCard" style="color:var(--yellow)">0</strong> дней чистый. Эта тяга пройдёт через несколько минут. Выбери действие — получи XP.</p>
+    </div>
+
+    <div style="padding:10px 20px;">
+      <div class="section-title" style="margin-bottom:10px;">// ВЫБЕРИ ДЕЙСТВИЕ</div>
+
+      <!-- BREATHING -->
+      <div class="action-card" id="ac-breath">
+        <div class="action-header" onclick="toggleAction('breath')">
+          <span class="action-icon">🌬</span>
+          <div class="action-info">
+            <div class="action-title">ДЫХАНИЕ 4-7-8</div>
+            <div class="action-xp">+20 <span class="spirit-xp">ДУХ</span> · +10 <span class="body-xp">ТЕЛО</span></div>
+          </div>
+          <button class="action-check" id="chk-breath" onclick="event.stopPropagation();completeAction('breath')"></button>
+        </div>
+        <div class="action-body" id="body-breath">
+          <div class="action-desc">Вдох 4 секунды → задержка 7 → выдох 8. Три цикла снимают острую тревогу.</div>
+          <button class="action-do-btn" id="btn-breath" onclick="doBreathing()">→ ЗАПУСТИТЬ ДЫХАНИЕ</button>
+        </div>
+      </div>
+
+      <!-- GUITAR -->
+      <div class="action-card" id="ac-guitar">
+        <div class="action-header" onclick="toggleAction('guitar')">
+          <span class="action-icon">🎸</span>
+          <div class="action-info">
+            <div class="action-title">ВЗЯЛ ГИТАРУ</div>
+            <div class="action-xp">+15 <span class="mind-xp">РАЗУМ</span> · +10 <span class="spirit-xp">ДУХ</span></div>
+          </div>
+          <button class="action-check" id="chk-guitar" onclick="event.stopPropagation();completeAction('guitar')"></button>
+        </div>
+        <div class="action-body" id="body-guitar">
+          <div class="action-desc">Возьми гитару прямо сейчас. Не думай что играть — просто бренчи. Руки заняты, голова переключается. Сыграй 5 минут — потом отметь.</div>
+          <button class="action-do-btn" id="btn-guitar" onclick="startActionTimer('guitar', 5*60, 'ИГРАЕШЬ...')">→ СТАРТ 5 МИНУТ</button>
+        </div>
+      </div>
+
+      <!-- SWITCH -->
+      <div class="action-card" id="ac-switch">
+        <div class="action-header" onclick="toggleAction('switch')">
+          <span class="action-icon">🎮</span>
+          <div class="action-info">
+            <div class="action-title">ЗАПУСТИЛ SWITCH</div>
+            <div class="action-xp">+10 <span class="mind-xp">РАЗУМ</span></div>
+          </div>
+          <button class="action-check" id="chk-switch" onclick="event.stopPropagation();completeAction('switch')"></button>
+        </div>
+        <div class="action-body" id="body-switch">
+          <div class="action-desc">NFS или FC24 — один заезд или один матч. Не думай о тяге, думай о следующем повороте. Поиграй 10 минут.</div>
+          <button class="action-do-btn" id="btn-switch" onclick="startActionTimer('switch', 10*60, 'ИГРАЕШЬ...')">→ СТАРТ 10 МИНУТ</button>
+        </div>
+      </div>
+
+      <!-- PUSHUPS -->
+      <div class="action-card" id="ac-pushup">
+        <div class="action-header" onclick="toggleAction('pushup')">
+          <span class="action-icon">💪</span>
+          <div class="action-info">
+            <div class="action-title">10 ОТЖИМАНИЙ</div>
+            <div class="action-xp">+15 <span class="body-xp">ТЕЛО</span> · +5 <span class="spirit-xp">ДУХ</span></div>
+          </div>
+          <button class="action-check" id="chk-pushup" onclick="event.stopPropagation();completeAction('pushup')"></button>
+        </div>
+        <div class="action-body" id="body-pushup">
+          <div class="action-desc">Прямо сейчас. Встань и сделай 10. Физическое усилие моментально переключает мозг и снижает тягу.</div>
+          <button class="action-do-btn" id="btn-pushup" onclick="startPushupCounter()">→ СЧИТАТЬ ОТЖИМАНИЯ</button>
+          <div id="pushup-counter" style="display:none;text-align:center;padding-top:10px;">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:64px;color:var(--yellow);" id="pushup-num">0</div>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <button class="action-do-btn" onclick="pushupTap()" style="flex:2;font-size:20px;padding:16px;">+1</button>
+              <button class="action-do-btn" onclick="resetPushup()" style="flex:1;color:#555;">СБРОС</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WATER -->
+      <div class="action-card" id="ac-water">
+        <div class="action-header" onclick="toggleAction('water')">
+          <span class="action-icon">💧</span>
+          <div class="action-info">
+            <div class="action-title">ВЫПИЛ ВОДУ</div>
+            <div class="action-xp">+5 <span class="body-xp">ТЕЛО</span> · +5 <span class="spirit-xp">ДУХ</span></div>
+          </div>
+          <button class="action-check" id="chk-water" onclick="event.stopPropagation();completeAction('water')"></button>
+        </div>
+        <div class="action-body" id="body-water">
+          <div class="action-desc">Большой стакан холодной воды. Медленно, глоток за глотком. Осознанно. Это занимает 2 минуты и реально помогает.</div>
+          <button class="action-do-btn" id="btn-water" onclick="startActionTimer('water', 2*60, 'ПЬЁШь ВОДУ...')">→ СТАРТ 2 МИНУТЫ</button>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <button class="btn" onclick="completedCrisis()">✅ ПЕРЕЖИЛ БЕЗ СРЫВА (+25 🔥)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BREATHING SCREEN -->
+<div id="screen-breathing" class="screen">
+  <div class="hero" data-bg="ВДОХ">
+    <div class="day-label">// ДЫХАНИЕ 4-7-8</div>
+    <div class="hero-title">УСПОКОЙСЯ</div>
+  </div>
+  <div style="overflow-y:auto;flex:1;">
+    <div class="breathing-container">
+      <div class="breathing-circle" id="breathCircle">ГОТОВ</div>
+      <div class="breathing-instruction" id="breathInstruction">НАЖМИ СТАРТ</div>
+      <div class="breathing-count" id="breathCount"></div>
+    </div>
+    <div style="padding:0 20px 10px;"><button class="btn" onclick="startBreathing()">НАЧАТЬ</button></div>
+    <div style="padding:0 20px 12px;"><button class="btn secondary" onclick="finishBreathing()">✓ ГОТОВО — ПОЛУЧИТЬ XP</button></div>
+    <div style="padding:0 20px 20px;"><button class="btn secondary" onclick="goScreen('crisis')">← НАЗАД</button></div>
+  </div>
+</div>
+
+<!-- LOG -->
+<div id="screen-log" class="screen">
+  <div class="hero" data-bg="ЛОГ">
+    <div class="day-label">// ИСТОРИЯ</div>
+    <div class="hero-title">ДНЕВНИК</div>
+  </div>
+  <div style="overflow-y:auto;flex:1;" id="logList">
+    <div class="log-empty">Записей пока нет.</div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <button class="active" id="nav-home" onclick="goScreen('home')">ДЕНЬ</button>
+  <button id="nav-anchors" onclick="goScreen('anchors')">ЯКОРЯ</button>
+  <button id="nav-crisis" onclick="goScreen('crisis')">⚡ ТЯНЕТ</button>
+  <button id="nav-log" onclick="goScreen('log')">ЛОГ</button>
+</nav>
+
+<script>
+// ── STATE ──
+let state = {
+  startDate: null,
+  entries: [],
+  anchors: [],
+  anchorsDone: {},
+  crisisCount: 0,
+  workoutCount: 0,
+  selectedMood: null,
+  skills: { body:0, mind:0, spirit:0 }
+};
+
+const DEFAULT_ANCHORS = [
+  {time:'09:20',icon:'🚿',text:'Подъём — сразу холодный душ'},
+  {time:'10:00',icon:'🎸',text:'Выход. В дороге — любимый альбом'},
+  {time:'11:20',icon:'💻',text:'Работа. Beast Reporter'},
+  {time:'18:00',icon:'🥊',text:'Выход на тренировку'},
+  {time:'20:00',icon:'🔥',text:'Тайский бокс — выложись полностью'},
+  {time:'22:00',icon:'🍽',text:'Домой. Ужин с женой'},
+  {time:'22:30',icon:'🎸',text:'Гитара — 20 минут импровизации'},
+  {time:'23:00',icon:'🎮',text:'Until Dawn / Switch'},
+  {time:'23:30',icon:'💊',text:'Магний + Мелатонин → спать'},
+];
+
+// XP needed per level (cumulative)
+function xpForLevel(lvl) { return lvl * 100; }
+function getLevel(xp) { return Math.floor(xp / 100) + 1; }
+function getLevelXP(xp) { return xp % 100; }
+
+// ── LOAD / SAVE ──
+function load() {
+  try { const s = localStorage.getItem('beastclean_v3'); if (s) state = JSON.parse(s); } catch(e){}
+  if (!state.anchors || !state.anchors.length) state.anchors = DEFAULT_ANCHORS;
+  if (!state.anchorsDone) state.anchorsDone = {};
+  if (!state.entries) state.entries = [];
+  if (!state.crisisCount) state.crisisCount = 0;
+  if (!state.workoutCount) state.workoutCount = 0;
+  if (!state.startDate) state.startDate = new Date().toISOString();
+  if (!state.skills) state.skills = {body:0,mind:0,spirit:0};
+  save(); render();
+}
+function save() { localStorage.setItem('beastclean_v3', JSON.stringify(state)); }
+
+// ── HELPERS ──
+function getDays() { return state.startDate ? Math.floor((Date.now()-new Date(state.startDate))/86400000) : 0; }
+function getHours() { return state.startDate ? Math.floor((Date.now()-new Date(state.startDate))/3600000) : 0; }
+
+// ── NAV ──
+function goScreen(name) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  const nb = document.getElementById('nav-'+name);
+  if (nb) nb.classList.add('active');
+  if (name==='anchors') renderAnchors();
+  if (name==='log') renderLog();
+  if (name==='crisis') { document.getElementById('crisisDaysInCard').textContent=getDays(); resetCrisisActions(); }
+}
+
+// ── RENDER ──
+function render() {
+  const days = getDays();
+  document.getElementById('dayCount').innerHTML = days+' <span>дней</span>';
+  document.getElementById('hoursClean').textContent = getHours();
+  document.getElementById('crisisCount').textContent = state.crisisCount;
+  document.getElementById('workoutCount').textContent = state.workoutCount;
+  if (state.startDate) {
+    const d = new Date(state.startDate);
+    document.getElementById('startDateLabel').textContent = 'Начало: '+d.toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'});
+  }
+  const last = state.entries[state.entries.length-1];
+  document.getElementById('lastMoodDisplay').textContent = (last&&last.mood)?last.mood:'—';
+  renderSkills();
+}
+
+// ── SKILLS ──
+function renderSkills() {
+  const sk = state.skills;
+  ['body','mind','spirit'].forEach(function(k) {
+    const xp = sk[k]||0;
+    const lvl = getLevel(xp);
+    const cur = getLevelXP(xp);
+    const pct = cur;
+    const names = {body:'💪 ТЕЛО',mind:'🧠 РАЗУМ',spirit:'🔥 ДУХ'};
+    document.getElementById(k+'-meta').textContent = 'Ур. '+lvl+' · '+cur+'/100 XP';
+    document.getElementById(k+'-bar').style.width = pct+'%';
+  });
+}
+
+function addXP(body, mind, spirit, sourceEl) {
+  const old = {body:state.skills.body||0, mind:state.skills.mind||0, spirit:state.skills.spirit||0};
+  state.skills.body = (state.skills.body||0) + body;
+  state.skills.mind = (state.skills.mind||0) + mind;
+  state.skills.spirit = (state.skills.spirit||0) + spirit;
+
+  // Show XP popups
+  const pops = [];
+  if (body>0) pops.push({val:'+'+body+' 💪', color:'var(--body-color)'});
+  if (mind>0) pops.push({val:'+'+mind+' 🧠', color:'var(--mind-color)'});
+  if (spirit>0) pops.push({val:'+'+spirit+' 🔥', color:'var(--spirit-color)'});
+
+  pops.forEach(function(p, i) {
+    setTimeout(function() { showXPPopup(p.val, p.color, sourceEl); }, i*180);
+  });
+
+  // Check level ups
+  ['body','mind','spirit'].forEach(function(k) {
+    const wasLvl = getLevel(old[k]);
+    const nowLvl = getLevel(state.skills[k]);
+    if (nowLvl > wasLvl) {
+      const names = {body:'ТЕЛО',mind:'РАЗУМ',spirit:'ДУХ'};
+      setTimeout(function() { showToast('⬆️ УРОВЕНЬ! '+names[k]+' Ур.'+nowLvl); playLevelUp(); }, 600);
+    }
+  });
+
+  save();
+  renderSkills();
+}
+
+function showXPPopup(text, color, anchorEl) {
+  const pop = document.createElement('div');
+  pop.className = 'xp-popup';
+  pop.textContent = text;
+  pop.style.color = color;
+  document.body.appendChild(pop);
+
+  // Position near center screen or near element
+  const x = window.innerWidth/2 - 40 + (Math.random()*60-30);
+  const y = window.innerHeight/2;
+  pop.style.left = x+'px';
+  pop.style.top = y+'px';
+
+  requestAnimationFrame(function() {
+    pop.classList.add('animate');
+    setTimeout(function() { pop.remove(); }, 1500);
+  });
+}
+
+// ── MOOD ──
+function selectMood(btn) {
+  document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  state.selectedMood = btn.dataset.mood;
+}
+
+// ── SAVE ENTRY ──
+function saveEntry() {
+  const note = document.getElementById('quickNote').value.trim();
+  if (!state.selectedMood && !note) { showToast('ВЫБЕРИ НАСТРОЕНИЕ ИЛИ НАПИШИ ЗАМЕТКУ'); return; }
+  state.entries.push({date:new Date().toISOString(),mood:state.selectedMood,note,day:getDays()});
+  addXP(0,0,15,null); // day saved = spirit XP
+  state.selectedMood = null;
+  document.getElementById('quickNote').value='';
+  document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
+  save(); render();
+  showToast('ДЕНЬ '+getDays()+' ЗАПИСАН 🤘 +15 🔥');
+}
+
+// ── WORKOUT ──
+function logWorkout() {
+  state.workoutCount++;
+  addXP(30,0,0,null);
+  save(); render();
+  showToast('ТРЕНИРОВКА ЗАПИСАНА 🥊 +30 💪');
+}
+
+// ── RESET ──
+function resetStreak() {
+  if (!confirm('Сбросить счётчик?')) return;
+  state.startDate = new Date().toISOString();
+  save(); render(); showToast('СЧЁТЧИК СБРОШЕН.');
+}
+
+// ── ANCHORS ──
+let editIdx = null;
+
+function renderAnchors() {
+  const list = document.getElementById('anchorList');
+  const today = new Date().toDateString();
+  const sorted = state.anchors.map((a,i)=>({...a,i})).sort((a,b)=>a.time.localeCompare(b.time));
+  if (!sorted.length) { list.innerHTML='<div class="log-empty">Якорей нет.<br>Нажми + чтобы добавить.</div>'; renderStreak(); return; }
+  list.innerHTML='';
+  sorted.forEach(function(a) {
+    const key = today+'_'+a.i;
+    const done = !!state.anchorsDone[key];
+    const div = document.createElement('div');
+    div.className='anchor-item';
+    div.innerHTML='<div class="anchor-time">'+a.time+'</div>'+
+      '<div class="anchor-text">'+(a.icon||'📌')+' '+a.text+'</div>'+
+      '<div class="anchor-controls">'+
+        '<button class="icon-btn" onclick="openEditModal('+a.i+')">✏️</button>'+
+        '<button class="icon-btn" onclick="deleteAnchor('+a.i+')" style="color:#e63022">✕</button>'+
+        '<button class="anchor-check '+(done?'done':'')+'" onclick="toggleAnchor(\''+key+'\',this)"></button>'+
+      '</div>';
+    list.appendChild(div);
+  });
+  renderStreak();
+}
+
+function toggleAnchor(key,btn) {
+  state.anchorsDone[key]=!state.anchorsDone[key];
+  btn.classList.toggle('done',state.anchorsDone[key]);
+  save();
+}
+
+function renderStreak() {
+  const grid = document.getElementById('streakGrid');
+  grid.innerHTML='';
+  const today = new Date();
+  const start = state.startDate?new Date(state.startDate):today;
+  for (let i=20;i>=0;i--) {
+    const d=new Date(today); d.setDate(d.getDate()-i);
+    const isToday=d.toDateString()===today.toDateString();
+    const isClean=d>=start;
+    const div=document.createElement('div');
+    div.className='streak-day'+(isClean?' clean':'')+(isToday?' today':'');
+    div.textContent=d.getDate();
+    grid.appendChild(div);
+  }
+}
+
+// MODAL
+function openAddModal() {
+  editIdx=null;
+  document.getElementById('modalTitle').textContent='// НОВЫЙ ЯКОРЬ';
+  document.getElementById('modalTime').value='09:00';
+  document.getElementById('modalIcon').value='';
+  document.getElementById('modalText').value='';
+  document.getElementById('anchorModal').classList.add('open');
+}
+function openEditModal(i) {
+  editIdx=i;
+  const a=state.anchors[i];
+  document.getElementById('modalTitle').textContent='// РЕДАКТИРОВАТЬ';
+  document.getElementById('modalTime').value=a.time;
+  document.getElementById('modalIcon').value=a.icon||'';
+  document.getElementById('modalText').value=a.text;
+  document.getElementById('anchorModal').classList.add('open');
+}
+function closeModal() { document.getElementById('anchorModal').classList.remove('open'); editIdx=null; }
+document.getElementById('anchorModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+function saveAnchor() {
+  const time=document.getElementById('modalTime').value;
+  const icon=document.getElementById('modalIcon').value.trim()||'📌';
+  const text=document.getElementById('modalText').value.trim();
+  if (!text) { showToast('ВВЕДИ ОПИСАНИЕ'); return; }
+  if (editIdx!==null) { state.anchors[editIdx]={time,icon,text}; showToast('ЯКОРЬ ОБНОВЛЁН ✓'); }
+  else { state.anchors.push({time,icon,text}); showToast('ЯКОРЬ ДОБАВЛЕН ✓'); }
+  save(); closeModal(); renderAnchors();
+}
+function deleteAnchor(i) {
+  if (!confirm('Удалить этот якорь?')) return;
+  state.anchors.splice(i,1); save(); renderAnchors(); showToast('ЯКОРЬ УДАЛЁН');
+}
+
+// ── CRISIS TIMER ──
+let crisisInterval=null, crisisSeconds=900;
+
+function startCrisisTimer() {
+  crisisSeconds=900;
+  clearInterval(crisisInterval);
+  document.getElementById('crisisTimer').style.color='';
+  crisisInterval=setInterval(function(){
+    crisisSeconds--;
+    updateCrisisTimer();
+    if (crisisSeconds<=0) onTimerDone();
+  },1000);
+  updateCrisisTimer();
+}
+function stopCrisisTimer() { clearInterval(crisisInterval); crisisSeconds=900; updateCrisisTimer(); document.getElementById('crisisTimer').style.color=''; }
+function updateCrisisTimer() {
+  const m=Math.floor(crisisSeconds/60),s=crisisSeconds%60;
+  document.getElementById('crisisTimer').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+function onTimerDone() {
+  clearInterval(crisisInterval);
+  const el=document.getElementById('crisisTimer');
+  el.textContent='✓ ГОТОВО'; el.style.color='var(--green)';
+  playDoneSound(); vibrateDevice();
+  showToast('ТЯГА ПРОШЛА — ТЫ УСТОЯЛ 💪');
+}
+
+// ── CRISIS ACTIONS ──
+let actionTimers = {};
+let pushupCount = 0;
+let completedActions = {};
+
+function resetCrisisActions() {
+  completedActions = {};
+  Object.values(actionTimers).forEach(function(t){clearInterval(t);});
+  actionTimers = {};
+  pushupCount = 0;
+  ['breath','guitar','switch','pushup','water'].forEach(function(id) {
+    const chk = document.getElementById('chk-'+id);
+    const card = document.getElementById('ac-'+id);
+    const btn = document.getElementById('btn-'+id);
+    if (chk) { chk.classList.remove('checked'); chk.textContent=''; }
+    if (card) card.classList.remove('done-card');
+    if (btn) { btn.classList.remove('done-btn'); }
+    const body = document.getElementById('body-'+id);
+    if (body) body.classList.remove('open');
+  });
+  const pc = document.getElementById('pushup-counter');
+  const pb = document.getElementById('btn-pushup');
+  if (pc) pc.style.display='none';
+  if (pb) pb.style.display='block';
+  document.getElementById('pushup-num') && (document.getElementById('pushup-num').textContent='0');
+}
+
+function toggleAction(id) {
+  const body = document.getElementById('body-'+id);
+  if (body) body.classList.toggle('open');
+}
+
+function completeAction(id) {
+  if (completedActions[id]) return;
+  completedActions[id] = true;
+  const chk = document.getElementById('chk-'+id);
+  const card = document.getElementById('ac-'+id);
+  if (chk) { chk.classList.add('checked'); chk.textContent='✓'; }
+  if (card) card.classList.add('done-card');
+
+  const xpMap = {
+    breath: [10,0,20],
+    guitar: [0,15,10],
+    switch: [0,10,0],
+    pushup: [15,0,5],
+    water:  [5,0,5]
+  };
+  const xp = xpMap[id]||[0,0,0];
+  addXP(xp[0],xp[1],xp[2],chk);
+  playXPSound();
+  vibrateDevice();
+
+  // mark btn as done
+  const btn = document.getElementById('btn-'+id);
+  if (btn) { btn.classList.add('done-btn'); btn.textContent='✓ ВЫПОЛНЕНО'; }
+}
+
+function doBreathing() {
+  goScreen('breathing');
+}
+
+function finishBreathing() {
+  completeAction('breath');
+  goScreen('crisis');
+}
+
+// Action countdown timer inside card
+function startActionTimer(id, seconds, label) {
+  if (actionTimers[id]) { clearInterval(actionTimers[id]); }
+  const btn = document.getElementById('btn-'+id);
+  let remaining = seconds;
+  function tick() {
+    if (remaining<=0) {
+      clearInterval(actionTimers[id]);
+      completeAction(id);
+      if (btn) { btn.classList.add('done-btn'); btn.textContent='✓ ВЫПОЛНЕНО'; }
+      return;
+    }
+    const m=Math.floor(remaining/60),s=remaining%60;
+    if (btn) btn.textContent=label+' '+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+    remaining--;
+  }
+  tick();
+  actionTimers[id]=setInterval(tick,1000);
+}
+
+// Pushup counter
+function startPushupCounter() {
+  pushupCount=0;
+  document.getElementById('pushup-num').textContent='0';
+  document.getElementById('pushup-counter').style.display='block';
+  document.getElementById('btn-pushup').style.display='none';
+}
+function pushupTap() {
+  pushupCount++;
+  document.getElementById('pushup-num').textContent=pushupCount;
+  vibrateDevice(); // tiny feedback
+  if (navigator.vibrate) navigator.vibrate(30);
+  if (pushupCount>=10) {
+    completeAction('pushup');
+    document.getElementById('pushup-num').style.color='var(--green)';
+  }
+}
+function resetPushup() {
+  pushupCount=0;
+  document.getElementById('pushup-num').textContent='0';
+  document.getElementById('pushup-num').style.color='var(--yellow)';
+}
+
+function completedCrisis() {
+  state.crisisCount++;
+  stopCrisisTimer();
+  addXP(0,0,25,null);
+  save(); render();
+  showToast('КРИЗИС #'+state.crisisCount+' ПРОЙДЕН 💪');
+  goScreen('home');
+}
+
+// ── BREATHING ──
+let breathInterval=null;
+function startBreathing() {
+  clearInterval(breathInterval);
+  const phases=[{name:'ВДОХ',dur:4,cls:'inhale'},{name:'ЗАДЕРЖКА',dur:7,cls:'hold'},{name:'ВЫДОХ',dur:8,cls:'exhale'}];
+  let pi=0,tl=phases[0].dur;
+  function run() {
+    const p=phases[pi];
+    document.getElementById('breathCircle').className='breathing-circle '+p.cls;
+    document.getElementById('breathInstruction').textContent=p.name;
+    document.getElementById('breathCount').textContent=tl;
+    breathInterval=setInterval(function(){
+      tl--;
+      document.getElementById('breathCount').textContent=tl;
+      if (tl<=0){clearInterval(breathInterval);pi=(pi+1)%phases.length;tl=phases[pi].dur;run();}
+    },1000);
+  }
+  run();
+}
+
+// ── LOG ──
+function renderLog() {
+  const list=document.getElementById('logList');
+  if (!state.entries.length){list.innerHTML='<div class="log-empty">Записей пока нет.</div>';return;}
+  list.innerHTML=[...state.entries].reverse().map(function(e){
+    const d=new Date(e.date);
+    const ds=d.toLocaleDateString('ru-RU',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+    return '<div class="log-entry"><div class="log-entry-header"><div class="log-entry-date">ДЕНЬ '+e.day+' — '+ds+'</div><div class="log-entry-mood">'+(e.mood||'')+'</div></div>'+(e.note?'<div class="log-entry-note">'+e.note+'</div>':'')+'</div>';
+  }).join('');
+}
+
+// ── SOUND ──
+function playDoneSound() {
+  try {
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    [440,550,660].forEach(function(freq,i){
+      const osc=ctx.createOscillator(),gain=ctx.createGain();
+      osc.connect(gain);gain.connect(ctx.destination);
+      osc.type='sine';osc.frequency.value=freq;
+      gain.gain.setValueAtTime(0,ctx.currentTime+i*.18);
+      gain.gain.linearRampToValueAtTime(.35,ctx.currentTime+i*.18+.05);
+      gain.gain.linearRampToValueAtTime(0,ctx.currentTime+i*.18+.35);
+      osc.start(ctx.currentTime+i*.18);osc.stop(ctx.currentTime+i*.18+.4);
+    });
+  } catch(e){}
+}
+function playXPSound() {
+  try {
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const osc=ctx.createOscillator(),gain=ctx.createGain();
+    osc.connect(gain);gain.connect(ctx.destination);
+    osc.type='sine';osc.frequency.setValueAtTime(600,ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(900,ctx.currentTime+.12);
+    gain.gain.setValueAtTime(.25,ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0,ctx.currentTime+.2);
+    osc.start(ctx.currentTime);osc.stop(ctx.currentTime+.2);
+  } catch(e){}
+}
+function playLevelUp() {
+  try {
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    [523,659,784,1047].forEach(function(freq,i){
+      const osc=ctx.createOscillator(),gain=ctx.createGain();
+      osc.connect(gain);gain.connect(ctx.destination);
+      osc.type='sine';osc.frequency.value=freq;
+      gain.gain.setValueAtTime(0,ctx.currentTime+i*.12);
+      gain.gain.linearRampToValueAtTime(.3,ctx.currentTime+i*.12+.05);
+      gain.gain.linearRampToValueAtTime(0,ctx.currentTime+i*.12+.25);
+      osc.start(ctx.currentTime+i*.12);osc.stop(ctx.currentTime+i*.12+.3);
+    });
+  } catch(e){}
+}
+function vibrateDevice() { if (navigator.vibrate) navigator.vibrate([200,100,200,100,400]); }
+
+// ── TOAST ──
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},2500);
+}
+
+setInterval(render,60000);
+load();
+</script>
+</body>
+</html>
